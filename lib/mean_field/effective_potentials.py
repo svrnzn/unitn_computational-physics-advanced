@@ -27,11 +27,8 @@ class Hartree:
         centrifugal_potential = Centrifugal(self.l)
         hartree_potential = 0
         for y in self.mesh:
-            if y <= x:
-                hartree_potential = hartree_potential + self.rho(y) * math.pow(y, 2) * self.step / x
-            else:
-                hartree_potential = hartree_potential + self.rho(y) * y * self.step
-        return 4 * math.pi * hartree_potential + centrifugal_potential.compute(x)
+            hartree_potential = hartree_potential + self.rho(y) * (abs(x - y) - (x + y)) * y / x * self.step
+        return - 2 * math.pi * hartree_potential + centrifugal_potential.compute(x)
 
 class KohnSham:
     def __init__(self, mesh, step, rho, exchange_potential, correlation_potential, external_potential, l):
@@ -45,4 +42,4 @@ class KohnSham:
         self.l = l
     def compute(self, x):
         hartree_potential = Hartree(self.mesh, self.step, self.rho, self.l)
-        return hartree_potential.compute(x) + self.exchange_potential(self.rho(x)) + self.correlation_potential(self.rho(x)) + self.external_potential(x)
+        return hartree_potential.compute(x) + self.exchange_potential(x) + self.correlation_potential(x) + self.external_potential(x)
