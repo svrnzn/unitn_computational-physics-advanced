@@ -10,7 +10,7 @@ def solve(mesh, step, potential, boundary_conditions = 'zero'):
         for i in range(no_of_points):
             if i > 0:
                 M[i][i - 1] = - 0.5 * step_inverse_square
-            M[i][i] = step_inverse_square + potential(mesh[i])
+            M[i][i] = step_inverse_square + potential[i]
             if i < no_of_points - 1:
                 M[i][i + 1] = - 0.5 * step_inverse_square
     elif boudary_conditions == 'periodic':

@@ -5,154 +5,183 @@ from mean_field import effective_potentials
 
 
 '''
-change variable name local_rho
-change name correlation and exchange potentials
+define and implement decent output
 
-!!!implement averaging of rhos
-!!!implement energy functions
+!!!search for 'disgusting'!!!
 
+better naming here and there
+
+
+implement energy2 function
 implement automatic l_max selection
-implement keeping of needed states and eigenvalues only
-implement filling of states -> (updated to) implement check on magick numbers
+implement keeping of needed states and eigenvalues only in l_max != -1 case
+implement filling of states -> (updated to) implement check on magick numbers -> (updated to) implemented some rough way
 '''
-
-
-#SETTINGS
-
-#mesh settings
-R = 16
-step = 0.016
-
-#number of electrons and related quantities settings
-N = 8
-
-#shell_structure = numpy.array( [1,1] )
-
-wigner_seitz_radius = 4
-R_c = math.pow(N, 1 / 3) * wigner_seitz_radius
-positive_charge_density = N / (4 / 3 * math.pi * math.pow(R_c, 3))
-
-l_max = 1#WILL YOU TRY TO FIND A WAY TO CALCULATE THIS FROM N? (Not sure you can though, eigenstates' order in terms of eigenvalues depends on the potential).
-
-#initial density settings
-mu = 1
-
-#stopping criteria
-#epsilon = 0.01
-ITERATIONS = 2
-
-#self consistency
-beta = 0.5
-
-'''
-def zero(x):
-    return 0
-    '''
 
 class Rho:
-    def __init__(self, mesh, step, occupied_states, degeneracies, beta = 0, old_rho = 'you dont draw a shit lebowsky'):#how do i give a function as a default?
+    def __init__(self, mesh, step, beta = 0):
         self.mesh = mesh
         self.step = step
-        self.occupied_states = occupied_states
-        self.degeneracies = degeneracies
         self.beta = beta
-        self.old_rho = old_rho
-    def compute(self, x):
-        local_rho = 0
-        for i in range(len(self.degeneracies)):#len(degeneracies) is not that elegant
-            local_rho = local_rho + self.degeneracies[i] * math.pow(self.occupied_states[:, i][x / self.step - 1], 2)
+    def compute(self, occupied_states, degeneracies, old_rho):
+        rho = numpy.zeros(len(self.mesh))
+        for i in range(len(self.mesh)):
+            for j in range(len(degeneracies)):#len(degeneracies) is not that elegant
+                rho[i] = rho[i] + degeneracies[j] * math.pow(occupied_states[:, j][i], 2)
         if self.beta == 0:
-            return local_rho / (4 * math.pi)
+            return rho / (4 * math.pi)
         else:
-            return self.beta * local_rho / (4 * math.pi) + (1 - self.beta) * self.old_rho(x)
+            return self.beta * rho / (4 * math.pi) + (1 - self.beta) * old_rho
 
-'''
 class Energy1:
-    def __init__(self, eigenvalues, degeneracies, rho, hartree_potential, exchange_potential, correlation_potential):
-        self.eigenvalues = eigenvalues
-    def compute(self):
-        return numpy.sum(self.eigenvalues * self.degeneracies) #to finish
+    def __init__(self, mesh, step):
+        self.mesh = mesh
+        self.step = step
+    def compute(self, occupied_eigenvalues, degeneracies, rho, hartree_potential, exchange_contribute, correlation_contribute):
+        return numpy.sum(eigenvalues * degeneracies) - 2 * math.pi * numpy.sum(self.mesh * self.mesh * rho * hartree_potential) * self.step - 4 * math.pi * numpy.sum(self.mesh * self.mesh * rho * rho * (exchange_contribute + correlation_contribute)) * self.step# is the exchange and correlation potential correct?
 
-class Energy2:
-    def energy():
-        pass
 '''
+class Energy2:
+    def __init__(self, mesh, step, external_potential):
+        self.mesh = mesh
+        self.step = step
+        self.external_potential = external_potential
+    def r_laplacian(r_function):# better naming needed
+        d2r_r_function = numpy.empty(len(r_function))
+        for i in range(1, len(state) - 1):
+            d2r_state = (r_function[i + 1] - 2 * r_function[i] + r_function[i - 1])
+        # 0th order approx
+        d2r_state[0] = d2r_state[1]
+        d2r_state[len(d2r_state) - 1] = d2r_state[len(d2r_state) - 2]
+        return d2r_state / self.step**2
+
+    def energy(self, occupied_states, angular_momentum, degeneracies):
+        kinetic_energy_radial_density = numpy.zeros(len(self.mesh))
+        for i in range(len(angular_momentum)):# len(angular_momentum) is not that elegant
+            kinetic_energy_radial_density = kinetic_energy_radial_density - degeneracies[i] * 0.5 * (occupied_states[:, i] * self.r_laplacian(self.mesh * occupied_states[:, i]) / self.mesh - 1 / (self.mesh * self.mesh) * angular_momentum[i] * (angular_momentum[i] + 1))
+        kinetic_energy = numpy.sum(kinetic_energy_radial_density * self.mesh * self.mesh) * self.step
+
+        interaction_energy_radial_density
+        for i in range(len(angular_momentum)):
+            for j in range(i):
+                sfd
+# scipy.integrate and scipy.spherical_harmonics are your friends
+'''
+
 
 if __name__ == '__main__':
-    class LdaExchangePotential:
-        def __init__(self, rho):
-            self.rho = rho
-        def compute(self, x):
-            return - math.pow(3 * self.rho(x) / math.pi, 1 / 3)
+#SETTINGS
+#mesh settings
+    R = 20
+    step = 0.02
 
-    class LdaCorrelationPotential:
-        def __init__(self, rho):
-            self.rho = rho
-        def compute(self, x):#to optimize
-            return - 0.44 / (4 * math.pi) * 1 / math.pow(7.8 + math.pow(3 / (4 * math.pi * self.rho(x)), 1 / 3), 2) * 1 / math.pow(3 / (4 * math.pi * self.rho(x)), 2 / 3) * 1 / self.rho(x) - 0.44 / (7.8 + math.pow(3 / (4 * math.pi * self.rho(x)), 1 / 3))
+#number of electrons and related quantities settings
+    N = 40
 
-    class ExternalPotential:
-        def compute(x):
-            if x <= R_c:
-                return - 2 * math.pi * positive_charge_density * (math.pow(R_c, 2) - 1 / 3 * math.pow(x, 2))
-            else:
-                return - 4 / 3 * math.pi * positive_charge_density * math.pow(R_c, 3) / x
+#    electronic_configuration = numpy.array([1, 1])# 8 atoms
+#    electronic_configuration = numpy.array([2, 1, 1])# 20 atoms
+    electronic_configuration = numpy.array([2, 2, 1, 1])# 40 atoms
 
-    class InitialDensity:
-        def __init__(self, normalization_constant):
-            self.normalization_constant = normalization_constant
-        def compute(self, x):
-            return self.normalization_constant / (1 + math.exp(- mu * (R_c - 0.5 - x)))
+    l_max = - 1# set to - 1 if you give set the electronic configuration manually
 
-    def density_normalization(mesh, step, rho):#better naming needed
-        density = numpy.empty(len(mesh))#find some better naming
+    wigner_seitz_radius = 3.93
+    R_c = math.pow(N, 1 / 3) * wigner_seitz_radius
+    positive_charge_density = N / (4 / 3 * math.pi * math.pow(R_c, 3))
+
+#initial density settings
+    mu = 1
+
+#stopping criteria
+    single_energy_epsilon = 0.001
+#    double_energies_epsilon = 0.1
+#    ITERATIONS = 1
+
+#self consistency
+    beta = 0.25
+
+
+#external potential
+    def v_ext(mesh):
+        external_potential = numpy.empty(len(mesh))
         for i in range(len(mesh)):
-            density[i] = rho(mesh[i])
-        return 1 / (4 * math.pi * numpy.sum(density * mesh * mesh) * step)#4 pi thing
+            if mesh[i] <= R_c:
+                external_potential[i] = - 2 * math.pi * positive_charge_density * (math.pow(R_c, 2) - 1 / 3 * math.pow(mesh[i], 2))
+            else:
+                external_potential[i] = - 4 / 3 * math.pi * positive_charge_density * math.pow(R_c, 3) / mesh[i]
+        return external_potential
+
+#initial density
+    def initial_density(mesh, normalization_constant = 1):
+        rho = numpy.empty(len(mesh))
+        for i in range(len(mesh)):
+            rho[i] = normalization_constant / (1 + math.exp(- mu * (R_c - mesh[i])))
+        return rho
+
+    def density_normalization(mesh, step, rho):# generalization to arbitrarly spaced meshes
+        return 1 / (4 * math.pi * numpy.sum(rho * mesh * mesh) * step)
 
 
     mesh = numpy.arange(step, R, step)#careful, the last point is missing
 
-    rho = InitialDensity(1)
-    density_normalization_constant = density_normalization(mesh, step, rho.compute)
-    rho = InitialDensity(N * density_normalization_constant)
+    external_potential = v_ext(mesh)
 
-    external_potential = ExternalPotential
+    rho = initial_density(mesh, 1)
+    initial_density_normalization_constant = density_normalization(mesh, step, rho)
+    rho = initial_density(mesh, N * initial_density_normalization_constant)
 
-#    while energy_discrepancy > epsilon:
-    j = ITERATIONS
-    while j > 0:
+    lda_kohn_sham = effective_potentials.LdaKohnSham(mesh, step, external_potential)# think about naming
+    effective_potential = lda_kohn_sham.kohn_sham_potential# effective_potential(rho, l)
 
+    rho_compute = Rho(mesh, step, beta).compute
+
+#    j = ITERATIONS
+#    while j > 0:
+
+    energy_compute = Energy1(mesh,step).compute
+    old_energy = 0# i doubled the condition on the while cycle to allow this
+    energy_change = 0
+    j = 0
+    while energy_change > single_energy_epsilon or j < 2:
 
         eigenvalues = numpy.empty(0)
         eigenvectors = numpy.empty( (len(mesh), 0) )
         angular_momentum = numpy.empty(0)
 
-        exchange_potential = LdaExchangePotential(rho.compute)
-        correlation_potential = LdaCorrelationPotential(rho.compute)
+        if l_max != - 1:
+            for l in range(l_max + 1):
+                tmp_eigenvalues, tmp_eigenvectors = by_diagonalization.solve(mesh, step, effective_potential(rho, l))
 
-        for l in range(l_max + 1):
-            effective_potential = effective_potentials.KohnSham(mesh, step, rho.compute, exchange_potential.compute, correlation_potential.compute, external_potential.compute, l)
-            tmp_eigenvalues, tmp_eigenvectors = by_diagonalization.solve(mesh, step, effective_potential.compute)
+                eigenv_needed = int(N / (2 * (2 * l + 1)))
+                tmp_eigenvalues = tmp_eigenvalues[0:eigenv_needed]#is int() good enough, you might want to keep int() + 1
+                tmp_eigenvectors = tmp_eigenvectors[:,0:eigenv_needed]
 
-            eigenv_needed = int(N / (2 * (2 * l + 1)))
+                for i in range(len(tmp_eigenvalues)):#not elegant
+                    tmp_eigenvectors[:, i] = tmp_eigenvectors[:, i] / mesh
 
-            tmp_eigenvalues = tmp_eigenvalues[0:eigenv_needed]#is int() good enough, you might want to keep int() + 1
-            tmp_eigenvectors = tmp_eigenvectors[:,0:eigenv_needed]
+                eigenvalues = numpy.append(eigenvalues, tmp_eigenvalues)
+                eigenvectors = numpy.append(eigenvectors, tmp_eigenvectors, 1)
+                angular_momentum = numpy.append(angular_momentum, l * numpy.ones(len(tmp_eigenvalues)))
 
-            for i in range(len(tmp_eigenvalues)):#not elegant
-                tmp_eigenvectors[:, i] = tmp_eigenvectors[:, i] / mesh
+        else:
+            for l in range(len(electronic_configuration)):
+                tmp_eigenvalues, tmp_eigenvectors = by_diagonalization.solve(mesh, step, effective_potential(rho, l))
 
-            eigenvalues = numpy.append(eigenvalues, tmp_eigenvalues)
-            eigenvectors = numpy.append(eigenvectors, tmp_eigenvectors, 1)
-            angular_momentum = numpy.append(angular_momentum, l * numpy.ones(len(tmp_eigenvalues)))
+                tmp_eigenvalues = tmp_eigenvalues[0:electronic_configuration[l]]#is int() good enough, you might want to keep int() + 1
+                tmp_eigenvectors = tmp_eigenvectors[:,0:electronic_configuration[l]]
 
+                for i in range(len(tmp_eigenvalues)):#not elegant
+                    tmp_eigenvectors[:, i] = tmp_eigenvectors[:, i] / mesh
+
+                eigenvalues = numpy.append(eigenvalues, tmp_eigenvalues)
+                eigenvectors = numpy.append(eigenvectors, tmp_eigenvectors, 1)
+                angular_momentum = numpy.append(angular_momentum, l * numpy.ones(len(tmp_eigenvalues)))
+
+        #this block is needed only in the l_max != -1 case, left it here for clarity
         idx = eigenvalues.argsort()
         eigenvalues = eigenvalues[idx]
         eigenvectors = eigenvectors[:, idx]
         angular_momentum = angular_momentum[idx]
 
-        #you should check wether N is a magick number at some stage
         #this could be optimized allocating the space needed instead of appending things later
         unassigned_particles = N
         occupied_eigenvalues = numpy.empty(0)
@@ -167,24 +196,36 @@ if __name__ == '__main__':
             unassigned_particles = unassigned_particles - degeneracies[i]
             i = i + 1
 
+        if unassigned_particles != 0:
+            print('not a closed shell configuration!')
+            exit()
 
-#        rho = Rho(mesh, step, occupied_eigenvectors, degeneracies, beta, rho.compute)
+        rho = rho_compute(occupied_eigenvectors, degeneracies, rho)
 
-        j = j - 1
+#        j = j - 1
 
-#        energy_discrepancy = 
-#    rho = Rho(mesh, step, occupied_eigenvectors, degeneracies)
-    for x in mesh:
-        print(x, rho.compute(x))
+        current_energy = energy_compute(occupied_eigenvalues, degeneracies, rho, lda_kohn_sham.hartree_potential(rho), lda_kohn_sham.lda_exchange_density_rho_derivative(rho), lda_kohn_sham.lda_correlation_density_rho_derivative(rho))
+        try:
+            energy_change = abs(old_energy - current_energy)# is it possible to exploit the fact that GS energy is lowest?
+        except:
+            pass
+        old_energy = current_energy
+        print(current_energy)
 
+        j = j + 1
 
-#    print(density_normalization(mesh, step, rho.compute))
+    output = open(str(N) + 'at' + '_epsilon' + str(single_energy_epsilon) + '_beta' + str(beta) + '.dat', 'w')
+    output.write('# energy [hartree]:' + str(current_energy) + '\n')
+    output.write('# iterations before stopping: ' + str(j) + '\n')
+    output.write('#Runtime settings\n')
+    output.write('#number of atoms: ' + str(N) + '\n')
+    output.write('#electronic configuration: ' + str(electronic_configuration) + '\n')
+    output.write('#wiegner seitz radious: ' + str(wigner_seitz_radius) + '\n')
+    output.write('#R_c: ' + str(R_c) + '\n')
+    output.write('#beta: ' + str(beta) + '\n\n')
+    output.write('#r\trho\tpotential\n')
+    potential = effective_potential(rho, 0)
+    for i in range(len(mesh)):
+        output.write(str(mesh[i]) + '\t' + str(rho[i]) + '\t' + str(potential[i]) + '\n')
 
-
-    '''
-    exchange_potential = LdaExchangePotential(rho.compute)
-    correlation_potential = LdaCorrelationPotential(rho.compute)
-    effective_potential = effective_potentials.KohnSham(mesh, step, rho.compute, exchange_potential.compute, correlation_potential.compute, external_potential.compute, 0)
-    for x in mesh:
-        print(x, effective_potential.compute(x))
-        '''
+#    print(density_normalization(mesh, step, rho))
