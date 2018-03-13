@@ -1,2 +1,0 @@
-import nupmy
-import math
