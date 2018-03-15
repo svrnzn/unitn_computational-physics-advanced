@@ -15,7 +15,7 @@ class JohnCena:
         grid : numpy array of evenly spaced points
         """
         self.grid = grid
-        self.step = grid[1] - grid[0]
+        self.step = np.abs(grid[1]-grid[0])
 
     def __call__(self, potential):
         """Solve Scrodinger equation
