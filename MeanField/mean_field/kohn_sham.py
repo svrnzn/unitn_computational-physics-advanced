@@ -44,7 +44,7 @@ def lda_c_energy_density(density):
 
 def lda_c_energy_density_d(density):
     """Derivative with respect to density of lda_c_energy_density."""
-    lda_c_energy_density_d = - (0.44*np.power(3/4/np.pi, 1/4)/3
+    lda_c_energy_density_d = - (0.44*np.power(3/4/np.pi, 1/3)/3
                                 /np.power(7.8+np.power(3/4/np.pi/density, 1/3),
                                           2)
                                 /np.power(density, 2/3))
