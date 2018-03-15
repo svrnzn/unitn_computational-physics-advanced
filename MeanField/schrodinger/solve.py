@@ -11,7 +11,7 @@ class JohnCena:
 
     def __init__(self, grid):
         """
-        Parameters:
+        Argument
         grid : numpy array of evenly spaced points
         """
         self.grid = grid
@@ -20,7 +20,7 @@ class JohnCena:
     def __call__(self, potential):
         """Solve Scrodinger equation
 
-        Parameters
+        Argument
         potential : numpy array of potential computed at points in
                     self.grid
 
