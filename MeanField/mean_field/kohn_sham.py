@@ -47,7 +47,7 @@ def lda_c_energy_density_d(density):
     lda_c_energy_density_d = - (0.44*np.power(3/4/np.pi, 1/3)/3
                                 /np.power(7.8+np.power(3/4/np.pi/density, 1/3),
                                           2)
-                                /np.power(density, 2/3))
+                                /np.power(density, 4/3))
     return lda_c_energy_density_d
 
 def centrifugal_potential(grid, L):
